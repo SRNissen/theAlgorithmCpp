@@ -243,6 +243,20 @@ void pat_test(const char* text) {
         assert(strings::boyer_moore::is_prefix(text + currentIndex, "pat", 3));
     }
 }
+
+/**
+ * @brief  A test case in which we search for a pattern longer than the text
+ * @returns void
+ */
+void too_long_test() {
+    std::string text = "hello";
+    strings::boyer_moore::pattern pat;
+    strings::boyer_moore::init_pattern("hello world!", pat);
+    std::vector<size_t> indexes = strings::boyer_moore::search(text, pat);
+    assert(indexes.size() == 0);
+}
+
+
 /**
  * @brief Self-test implementations
  * @returns void
@@ -258,7 +272,7 @@ static void tests() {
 
     and_test(text);
     pat_test(text);
-
+    too_long_test();
     std::cout << "All tests have successfully passed!\n";
 }
 
