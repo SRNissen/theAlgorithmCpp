@@ -208,9 +208,33 @@ std::vector<size_t> search(const std::string& str, const pattern& arg) {
 template <typename F_it1, class F_it2, class O_it>
 void search(F_it1 text_begin, F_it1 text_end, F_it2 pattern_begin,
             F_it2 pattern_end, O_it output) {
-    auto result = search(std::string(text_begin, text_end),
-                         pattern(std::string(pattern_begin, pattern_end)));
-    for (auto r : result) output = r;
+    assert(text_begin <= text_end);
+    assert(pattern_begin <= pattern_end);
+    size_t const str_len = text_end - text_begin;
+
+    pattern const arg(std::string(pattern_begin, pattern_end));
+
+    size_t index_position = arg.pat().size() - 1;
+
+    while (index_position < str_len) {
+        size_t index_string = index_position;
+        int index_pattern = static_cast<int>(arg.pat().size()) - 1;
+
+        while (index_pattern >= 0 &&
+               *(text_begin + index_string) == arg.pat()[index_pattern]) {
+            --index_pattern;
+            --index_string;
+        }
+
+        if (index_pattern < 0) {
+            output = (index_position - arg.pat().length() + 1);
+            index_position += arg.good_suffix()[0];
+        } else {
+            index_position +=
+                std::max(arg.bad_char()[*(text_begin + index_string)],
+                         arg.good_suffix()[index_pattern + 1]);
+        }
+    }
 }
 
 /**
