@@ -63,21 +63,6 @@ namespace strings {
  * algorithm implementation
  */
 namespace boyer_moore {
-/**
- * @brief A structure representing all the data we need to search the
- * preprocessed pattern in text.
- */
-struct pattern {
-    std::string pat;
-
-    std::vector<size_t>
-        bad_char;  ///< bad char table used in [Bad Character
-                   ///< Heuristic](https://www.geeksforgeeks.org/boyer-moore-algorithm-for-pattern-searching/)
-
-    std::vector<size_t>
-        good_suffix;  ///< good suffix table used for [Good Suffix
-                      ///< heuristic](https://www.geeksforgeeks.org/boyer-moore-algorithm-good-suffix-heuristic/?ref=rp)
-};
 
 /**
  * @brief A function that preprocess the good suffix thable
@@ -89,8 +74,8 @@ struct pattern {
 void init_good_suffix(const std::string& str, std::vector<size_t>& arg) {
     arg.resize(str.size() + 1, 0);
 
-    // border_pos[i] - the index of the longest proper suffix of str[i..] which
-    // is also a proper prefix.
+    // border_pos[i] - the index of the longest proper suffix of str[i..]
+    // which is also a proper prefix.
     std::vector<size_t> border_pos(str.size() + 1, 0);
 
     size_t current_char = str.length();
@@ -121,7 +106,8 @@ void init_good_suffix(const std::string& str, std::vector<size_t>& arg) {
             arg[i] = largest_border_index;
         }
 
-        // If we go pass the largest border we find the next one as we iterate
+        // If we go pass the largest border we find the next one as we
+        // iterate
         if (i == largest_border_index) {
             largest_border_index = border_pos[largest_border_index];
         }
@@ -144,17 +130,33 @@ void init_bad_char(const std::string& str, std::vector<size_t>& arg) {
 }
 
 /**
- * @brief A function that initializes pattern
- *
- * @param str Text used for initialization
- * @param arg Initialized structure
- * @returns void
+ * @brief A class representing all the data we need to search the
+ * preprocessed pattern in text.
+ * @param str The string to search for
  */
-void init_pattern(const std::string& str, pattern& arg) {
-    arg.pat = str;
-    init_bad_char(str, arg.bad_char);
-    init_good_suffix(str, arg.good_suffix);
-}
+class pattern {
+ public:
+    pattern(std::string const& str) : pat_(str) {
+        init_bad_char(str, bad_char_);
+        init_good_suffix(str, good_suffix_);
+    }
+
+    std::string const& pat() const { return pat_; }
+    std::vector<size_t> const& bad_char() const { return bad_char_; }
+    std::vector<size_t> const& good_suffix() const { return good_suffix_; };
+
+ private:
+    std::string pat_;
+
+    std::vector<size_t>
+        bad_char_;  ///< bad char table used in [Bad Character
+                    ///< Heuristic](https://www.geeksforgeeks.org/boyer-moore-algorithm-for-pattern-searching/)
+
+    std::vector<size_t>
+        good_suffix_;  ///< good suffix table used for [Good Suffix
+                       ///< heuristic](https://www.geeksforgeeks.org/boyer-moore-algorithm-good-suffix-heuristic/?ref=rp)
+};
+
 /**
  * @brief A function that implements Boyer-Moore's algorithm.
  *
@@ -163,25 +165,25 @@ void init_pattern(const std::string& str, pattern& arg) {
  * @return Vector of indexes of the occurrences of pattern in text
  */
 std::vector<size_t> search(const std::string& str, const pattern& arg) {
-    size_t index_position = arg.pat.size() - 1;
+    size_t index_position = arg.pat().size() - 1;
     std::vector<size_t> index_storage;
 
     while (index_position < str.length()) {
         size_t index_string = index_position;
-        int index_pattern = static_cast<int>(arg.pat.size()) - 1;
+        int index_pattern = static_cast<int>(arg.pat().size()) - 1;
 
         while (index_pattern >= 0 &&
-               str[index_string] == arg.pat[index_pattern]) {
+               str[index_string] == arg.pat()[index_pattern]) {
             --index_pattern;
             --index_string;
         }
 
         if (index_pattern < 0) {
-            index_storage.push_back(index_position - arg.pat.length() + 1);
-            index_position += arg.good_suffix[0];
+            index_storage.push_back(index_position - arg.pat().length() + 1);
+            index_position += arg.good_suffix()[0];
         } else {
-            index_position += std::max(arg.bad_char[str[index_string]],
-                                       arg.good_suffix[index_pattern + 1]);
+            index_position += std::max(arg.bad_char()[str[index_string]],
+                                       arg.good_suffix()[index_pattern + 1]);
         }
     }
 
@@ -218,8 +220,7 @@ bool is_prefix(const char* str, const char* pat, size_t len) {
  * @returns void
  */
 void and_test(const char* text) {
-    strings::boyer_moore::pattern ands;
-    strings::boyer_moore::init_pattern("and", ands);
+    strings::boyer_moore::pattern ands("and");
     std::vector<size_t> indexes = strings::boyer_moore::search(text, ands);
 
     assert(indexes.size() == 2);
@@ -233,8 +234,7 @@ void and_test(const char* text) {
  * @returns void
  */
 void pat_test(const char* text) {
-    strings::boyer_moore::pattern pat;
-    strings::boyer_moore::init_pattern("pat", pat);
+    strings::boyer_moore::pattern pat("pat");
     std::vector<size_t> indexes = strings::boyer_moore::search(text, pat);
 
     assert(indexes.size() == 6);
@@ -250,12 +250,11 @@ void pat_test(const char* text) {
  * @returns void
  */
 void empty_test(const char* text) {
-    strings::boyer_moore::pattern pat;
-    strings::boyer_moore::init_pattern("", pat);
+    strings::boyer_moore::pattern pat("");
     std::vector<size_t> indexes = strings::boyer_moore::search(text, pat);
-
     assert(indexes.size() == 0);
 }
+
 
 /**
  * @brief  A test case in which we search for a pattern longer than the text
@@ -263,12 +262,10 @@ void empty_test(const char* text) {
  */
 void too_long_test() {
     std::string text = "hello";
-    strings::boyer_moore::pattern pat;
-    strings::boyer_moore::init_pattern("hello world!", pat);
+    strings::boyer_moore::pattern pat("hello world!");
     std::vector<size_t> indexes = strings::boyer_moore::search(text, pat);
     assert(indexes.size() == 0);
 }
-
 
 /**
  * @brief Self-test implementations
