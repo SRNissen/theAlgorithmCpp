@@ -46,6 +46,7 @@
 #include <climits>   /// for CHAR_MAX macro
 #include <cstring>   /// for strlen
 #include <iostream>  /// for IO operations
+#include <iterator>  /// for std::back_inserter
 #include <string>    /// for std::string
 #include <vector>    /// for std::vector
 
@@ -191,6 +192,28 @@ std::vector<size_t> search(const std::string& str, const pattern& arg) {
 }
 
 /**
+ * @brief A function that implements Boyer-Moore's algorithm
+ * using the iterator parameter style of the ISO C++ algorithm
+ * library
+ *
+ * @param text_begin A forward iterator to the beginning of the input text
+ * @param text_end A forward iterator to the past-the-end of the input text
+ * @param pattern_begin A forward iterator to the beginning of the pattern to
+ * search for
+ * @param pattern_end A forward iteratoer to teh past-the-end of the pattern to
+ * search for
+ * @param output An output iterator that can store the index of each occurrence
+ * of the pattern in the text
+ */
+template <typename F_it1, class F_it2, class O_it>
+void search(F_it1 text_begin, F_it1 text_end, F_it2 pattern_begin,
+            F_it2 pattern_end, O_it output) {
+    auto result = search(std::string(text_begin, text_end),
+                         pattern(std::string(pattern_begin, pattern_end)));
+    for (auto r : result) output = r;
+}
+
+/**
  * @brief Check if pat is prefix of str.
  *
  * @param str pointer to some part of the input text.
@@ -255,7 +278,6 @@ void empty_test(const char* text) {
     assert(indexes.size() == 0);
 }
 
-
 /**
  * @brief  A test case in which we search for a pattern longer than the text
  * @returns void
@@ -265,6 +287,16 @@ void too_long_test() {
     strings::boyer_moore::pattern pat("hello world!");
     std::vector<size_t> indexes = strings::boyer_moore::search(text, pat);
     assert(indexes.size() == 0);
+}
+
+void iterator_test(std::string text, std::string pattern,
+                   size_t expected_count) {
+    std::vector<size_t> indexes;
+    auto outputter = std::back_inserter(indexes);
+    strings::boyer_moore::search(text.begin(), text.end(), pattern.begin(),
+                                 pattern.end(), outputter);
+
+    assert(indexes.size() == expected_count);
 }
 
 /**
@@ -284,6 +316,9 @@ static void tests() {
     pat_test(text);
     empty_test(text);
     too_long_test();
+    iterator_test(text, "pat", 6);
+    iterator_test(text, "and", 2);
+    iterator_test(text, "", 0);
 
     std::cout << "All tests have successfully passed!\n";
 }
