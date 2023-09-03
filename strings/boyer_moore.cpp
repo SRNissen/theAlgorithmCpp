@@ -245,6 +245,19 @@ void pat_test(const char* text) {
 }
 
 /**
+ * @brief  A test case in which we search for the empty string
+ * @param text The text in which we search for the empty string
+ * @returns void
+ */
+void empty_test(const char* text) {
+    strings::boyer_moore::pattern pat;
+    strings::boyer_moore::init_pattern("", pat);
+    std::vector<size_t> indexes = strings::boyer_moore::search(text, pat);
+
+    assert(indexes.size() == 0);
+}
+
+/**
  * @brief  A test case in which we search for a pattern longer than the text
  * @returns void
  */
@@ -272,7 +285,9 @@ static void tests() {
 
     and_test(text);
     pat_test(text);
+    empty_test(text);
     too_long_test();
+
     std::cout << "All tests have successfully passed!\n";
 }
 
