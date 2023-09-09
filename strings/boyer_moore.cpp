@@ -63,6 +63,40 @@ namespace strings {
  * Moore](https://en.wikipedia.org/wiki/Boyer%E2%80%93Moore_string-search_algorithm)
  * algorithm implementation
  */
+
+template <typename Itr>
+class View {
+ public:
+    template <typename Container>
+    View(Container const& c)
+        : cbegin_{c.begin()}, cend_{c.end()}, size_{c.size()} {}
+
+    Itr begin() const { return cbegin_; }
+    Itr end() const { return cend_; }
+    Itr cbegin() const { return cbegin_; }
+    Itr cend() const { return cend_; }
+
+    size_t size() const { return size_; }
+
+ private:
+    size_t size_{};
+    Itr cbegin_;
+    Itr cend_;
+};
+
+/**
+ * @brief A convenience function for making a view over the entire contents of
+ * any given container.
+ *
+ * @tparam Container
+ * @param c The container to view.
+ * @return View<typename Container::const_iterator>
+ */
+template <typename Container>
+View<typename Container::const_iterator> make_View(Container const& c) {
+    return View<typename Container::const_iterator>{c};
+}
+
 namespace boyer_moore {
 
 /**
